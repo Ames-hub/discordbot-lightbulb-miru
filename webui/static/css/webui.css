@@ -1,0 +1,55 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+#main {
+    height: 100vh;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background-color: #1a1a1a;
+}
+
+#icon_scroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 20px;
+    padding: 10px;
+    max-width: 90%;
+    scroll-snap-type: x mandatory;
+}
+
+#icon_scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+#icon_scroll::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+.icon-link {
+    flex: 0 0 auto;
+    scroll-snap-align: center;
+    text-decoration: none;
+    transition: transform 0.2s;
+}
+
+.icon-link:hover {
+    transform: scale(1.2);
+}
+
+.icon-link svg {
+    fill: #e0e0e0;
+    transition: fill 0.3s;
+    width: 48px;
+    height: 48px;
+}
+
+.icon-link:hover svg {
+    fill: #ffffff;
+}

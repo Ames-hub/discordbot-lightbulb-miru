@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/favicon.png" type="image/x-icon">
+    <title>Ticket {{ bug.ticket_id }}</title>
+    <link rel="stylesheet" href="/static/css/bugticket.css">
+</head>
+<body>
+<div class="traceback">
+    <pre>{{ bug.exception }}</pre>
+</div>
+
+<div class="card">
+    <div class="section">
+        <a id="back-btn" href="/">BACK</a>
+    </div>
+
+    <div class="section">
+        <span class="label">🆔 Ticket ID</span>
+        <p>#{{ bug.ticket_id }}</p>
+    </div>
+
+    <div class="section">
+        <span class="label">🪲 Stated Bug</span>
+        <p>{{ bug.stated_bug }}</p>
+    </div>
+
+    <div class="section">
+        <span class="label">🧪 How to Reproduce</span>
+        <pre>{{ bug.reproduce }}</pre>
+    </div>
+
+    <div class="section">
+        <span class="label">📌 Resolution Status</span>
+        <p class="{{ 'resolved' if bug.resolved else 'unresolved' }}">
+            {{ 'Resolved ✅' if bug.resolved else 'Unresolved ❌' }}
+        </p>
+    </div>
+
+    <div class="section">
+        <span class="label">📝 Extra Info</span>
+        <pre>{{ bug.extra_info }}</pre>
+    </div>
+
+    <div class="section">
+        <span class="label">🗓️ Date</span>
+        <p>{{ bug.date }}</p>
+    </div>
+
+    <div class="section reporter">
+        🧍‍♂️ Reporter ID: {{ bug.reporter }}
+    </div>
+    <div class="section reporter">
+        🗓️ Date Reported: {{ bug.date_reported }}
+    </div>
+
+    <!-- Action Buttons -->
+    <form class="action-form" method="POST" action="/bugticket/{{ bug.ticket_id }}/update">
+        <div class="section">
+            <div class="section">
+                <button type="button" onclick="markAsResolved('{{ bug.ticket_id }}')">✅ Mark as Resolved</button>
+            </div>
+
+            <label for="action_taken" class="label">⚙️ Action Taken</label>
+            <select name="action_taken" id="action_taken" style="cursor: pointer;">
+                <option value="resolved">Resolved</option>
+                <option value="intended">Intended Functionality</option>
+                <option value="duplicate">Duplicate Report</option>
+                <option value="no-reproduce">Can't Be Reproduced</option>
+                <option value="wont_fix">Won’t be fixed</option>
+            </select>
+        </div>
+    </form>
+</div>
+<script src="/static/js/resolve_bug.js"></script>
+</body>
+</html>
