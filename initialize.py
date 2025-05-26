@@ -1,7 +1,12 @@
+import os.path
 import subprocess
 import json
 
 def init_project():
+    if not os.path.exists("configuration.json"):
+        print("Configuration file not found. Please run the file \"bootstrap.py\" to create a configuration file,\n"
+              "or drop a pre-existing valid config file in the root directory.")
+        exit(0)
     with open("configuration.json", "r") as f:
         configuration:dict = json.load(f)
 
@@ -18,9 +23,10 @@ def init_project():
     print("All containers started successfully.")
     print("Press CTRL + C to close all programs, or send SIGINT code 2")
     try:
-        while True:
+        while True:  # Keep the program running. Wait for Sigint 2
             pass
     except KeyboardInterrupt:
+        # On Sigint 2, shutdown containers.
         print("Shutdown signal received.\n"
               "Closed containers:")
         subprocess.run(["docker", "stop", PG_CONTAINER_NAME], check=True)

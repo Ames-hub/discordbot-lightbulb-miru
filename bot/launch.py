@@ -1,7 +1,6 @@
-from library.orderapi import run_api
 from library.database import dbman
 from library.botapp import botapp
-import multiprocessing
+import lightbulb
 import psycopg2
 import datetime
 import logging
@@ -9,6 +8,8 @@ import hikari
 import time
 import sys
 import os
+
+plugin = lightbulb.Plugin(__name__)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -61,15 +62,10 @@ botapp.d['orders'] = []
 dbman.modernize()
 
 botapp.load_extensions_from("cogs/bugs")
+botapp.load_extensions_from("cogs/tasks")
 
 if __name__ == "__main__":
     try:
-        api_proc = multiprocessing.Process(
-            target=run_api,
-            daemon=True,
-        )
-        api_proc.start()
-
         botapp.run(
             shard_count=1  # Default. TODO: Make this configurable in WebUI.
         )

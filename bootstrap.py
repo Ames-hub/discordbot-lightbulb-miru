@@ -171,14 +171,11 @@ volumes:
     print("Docker Compose file written successfully.")
 
     print("Setup complete!")
-    subprocess.run(["docker-compose", "up", "--build", "-d"], check=True)
-    print(
-        "Here is a summary of what we've done:\n"
-        f"1. Generated PostgreSQL service config: \"{PG_CONTAINER_NAME}\"\n"
-        f"{f'2. Generated FastAPI WebUI config: {WEBUI_CONTAINER_NAME}\n' if WEBUI_ENABLED else '2. Skipped WebUI setup.\n'}"
-        f"3. Configured Discord bot container: {BOT_CONTAINER_NAME}\n"
-        "4. Started all above services."
-    )
+    # build with no cache
+    subprocess.run(["docker-compose", "build", "--no-cache"], check=True)
+
+    # start the containers
+    subprocess.run(["docker-compose", "up", "-d"], check=True)
     print("All containers started successfully via Docker Compose.")
 
     # Waits until DB Is available, then creates db 'appdata'
@@ -222,6 +219,16 @@ volumes:
             }
         }, f)
 
+    print(
+        "Here is a summary of what we've done:\n"
+        f"1. Generated PostgreSQL service config: \"{PG_CONTAINER_NAME}\"\n"
+        f"{f'2. Generated FastAPI WebUI config: {WEBUI_CONTAINER_NAME}\n' if WEBUI_ENABLED else '2. Skipped WebUI setup.\n'}"
+        f"3. Configured Discord bot container: {BOT_CONTAINER_NAME}\n"
+        "4. Started all above services.\n"
+        "5. Created database 'appdb' in PostgreSQL.\n"
+        "6. Wrote configuration.json file.\n"
+        "7. Wrote the docker-compose.yml file."
+    )
     print("Setup complete. Please run initialize.py to start up the project containers in the future.")
 
 if __name__ == "__main__":

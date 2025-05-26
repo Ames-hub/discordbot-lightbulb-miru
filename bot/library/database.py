@@ -1,4 +1,5 @@
 import traceback
+import datetime
 import psycopg2
 import logging
 import inspect
@@ -48,7 +49,13 @@ class dbman:
                 'extra_info': 'TEXT',
                 'exception': 'TEXT',
                 'resolved': 'BOOLEAN DEFAULT FALSE',
-                'date': 'TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE \'localtime\')'
+                'date': 'BIGINT DEFAULT (EXTRACT(EPOCH FROM NOW()))'
+            },
+            'ban_list': {
+                'case_id': 'SERIAL PRIMARY KEY',
+                'banned_id': 'BIGINT NOT NULL UNIQUE',
+                'reason': 'TEXT',
+                'banned_username': 'TEXT DEFAULT \'UNKNOWN USERNAME\''
             }
         }
 
@@ -115,13 +122,13 @@ class database:
             cur = conn.cursor()
             cur.execute(
                 """INSERT INTO bug_reports (reporter_id, stated_bug, reproduction, extra_info, exception)
-                   VALUES (%s, %s, %s, %s, %s)""",
+                   VALUES (%s, %s, %s, %s, %s) RETURNING report_id;""",
                 (reporter_id, stated_bug, bug_reproduction, extra_info, exception)
             )
+            ticket_id = cur.fetchone()[0]
             conn.commit()
             cur.close()
             if return_ticket:
-                ticket_id = cur.lastrowid
                 return ticket_id
             return True
         except (psycopg2.errors.OperationalError, psycopg2.errors.ProgrammingError) as err:
@@ -148,7 +155,7 @@ class database:
                 "extra_info": report[4],
                 "exception": report[5],
                 "resolved": report[6],
-                "date": report[7]
+                "date": datetime.datetime.fromtimestamp(report[7])
             }
         except (psycopg2.errors.OperationalError, psycopg2.errors.ProgrammingError) as err:
             logging.error(f"There was a database error in file {inspect.stack()[0][1]}, line {inspect.stack()[0][2]}: {err}", exc_info=err)

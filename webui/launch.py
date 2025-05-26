@@ -1,10 +1,8 @@
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
 from library.database import database
 from fastapi import FastAPI, Request
-import requests
-
 app = FastAPI()
 
 # Mount a static directory to serve CSS/JS/images
@@ -49,7 +47,7 @@ class pages:
         return templates.TemplateResponse("bugticket.html", {"request": request, "bug": bug_data})
 
 # noinspection PyUnusedLocal
-class api:
+class bugs_api:
     @staticmethod
     @app.get("/api/")
     async def root(request: Request):
@@ -78,6 +76,27 @@ class api:
         else:
             return {"success": False, "message": f"Error while marking report {bug_id} as resolved."}
 
+class ban_api:
+    @staticmethod
+    @app.get("/api/bans/list")
+    async def list_all():
+        bans = database.list_bans()
+        return JSONResponse(bans, 200)
+
+    @staticmethod
+    @app.post("/api/bans/add")
+    async def ban(request: Request):
+        data = await request.json()
+        user_id = data.get("user_id")
+        ban_reason = data.get("ban_reason")
+
+        success = database.ban_user(user_id, ban_reason)
+        if success:
+            return JSONResponse({"success": True}, 200)
+        else:
+            return JSONResponse({"success": False}, 400)
+
+bot_order_queue = []
 class BotOrders:
     valid_bug_resolutions = [
         "resolved",
@@ -87,26 +106,32 @@ class BotOrders:
         "wont_fix"
     ]
 
-    class bug_reports:
-        @staticmethod
-        @app.post("/api/bot/order/alert_user")
-        def alert_user(report_id: int, resolution: str):
-            if resolution not in BotOrders.valid_bug_resolutions:
-                return False
+    @staticmethod
+    @app.post("/api/bot/order/queue")
+    async def queue_order(request: Request):
+        data = await request.json()
 
-            reporter_id = database.get_bug_report(report_id)['reporter_id']
+        bug_id = data.get("bug_id")
+        resolution = data.get("resolution")
+        order = data.get("order")
 
-            # noinspection HttpUrlsUsage
-            requests.post(
-                url=f"http://bot:8000/api/order/",
-                json={
-                    "order": "ALERT_USER_BUG_REPORT",
-                    "info": {
-                        "user_id": reporter_id,
-                        "report_id": report_id,
-                        "resolution": resolution
-                    }
-                }
-            )
+        bug_info = database.get_bug_report(bug_id)
+        reporter_id = bug_info['reporter_id']
 
-            return True
+        bot_order_queue.append({
+            "order": order,
+            "info": {
+                "reporting_user_id": reporter_id,
+                "report_id": bug_id,
+                "resolution": resolution,
+            }
+        })
+        return {"success": True}
+
+    @staticmethod
+    @app.get("/api/bot/pending_orders")
+    async def get_orders():
+        global bot_order_queue
+        orders = bot_order_queue.copy()
+        bot_order_queue.clear()
+        return orders

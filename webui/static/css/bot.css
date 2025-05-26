@@ -9,8 +9,8 @@ html, body {
     height: 100vh;
 }
 
-#top_half {
-    flex: 1;
+#top_div {
+    height: 25vh;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -20,49 +20,45 @@ html, body {
 
 #bottom_half {
     border-top: 1px solid #444;
-    flex: 1;
     overflow-y: auto;
     background-color: #1a1a1a;
 }
 
 #bug_list {
-    padding: 1rem;
+    position: relative;
+    width: 50dvw;
+}
+#ban_list {
+    position: relative;
+    float: right;
+    width: 50dvw;
 }
 
-#dynamic_list {
+#dynamic_bug_list {
+    height: calc(75dvh);
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: 10px;
 }
 
-.bug-link {
+#dynamic_ban_list {
+    height: calc(75dvh);
+    display: flex;
+    flex-direction: column;
+}
+
+.bug-link, .ban-link {
     display: block;
     background-color: #2a2a2a;
     color: #e0e0e0;
     text-decoration: none;
     padding: 12px 16px;
-    border-radius: 6px;
     transition: background-color 0.3s, color 0.3s;
 }
 
-.bug-link:hover {
+.bug-link:hover, .ban-link:hover {
     background-color: #3a3a3a;
     color: #ffffff;
     cursor: pointer;
-}
-
-a.bug-link:visited {
-    color: #bbbbbb;
-}
-
-#top_half {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    background-color: #1a1a1a;
 }
 
 #icon_scroll {
@@ -103,22 +99,4 @@ a.bug-link:visited {
 
 .icon-link:hover svg {
     fill: #ffffff;
-}
-
-#icon_scroll {
-    display: flex;
-    overflow-x: auto;
-    gap: 20px;
-    padding: 10px;
-    max-width: 90%;
-    scroll-snap-type: x mandatory;
-}
-
-#icon_scroll::-webkit-scrollbar {
-    height: 8px;
-}
-
-#icon_scroll::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 4px;
 }

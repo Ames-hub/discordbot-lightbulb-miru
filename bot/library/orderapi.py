@@ -1,16 +1,13 @@
+from .botapp import botapp, tasks
 from .database import database
-from .botapp import botapp
-from aiohttp import web
 import logging
 import hikari
 
-"""
-This is meant to be a simple API for the bot to communicate with the frontend.
-NOTHING more. No security, little validation, no nothing. DO NOT EXPOSE THIS API TO THE WORLD.
-"""
+# This must match what FastAPI sends
+ORDER_API_URL = "http://webui:80/api/bot/pending_orders"
 
 valid_orders = {
-    "ALERT_USER_BUG_REPORT"
+    "ALERT_USER_BUG_REPORT_RESOLUTION"
 }
 
 valid_bug_resolutions = [
@@ -21,29 +18,27 @@ valid_bug_resolutions = [
     "wont_fix"
 ]
 
-async def execute_order(request):
-    try:
-        data = await request.json()
-    except Exception as err:
-        logging.error(err)
-        return web.Response(status=400, text="Invalid JSON.")
+async def execute_order(order: dict):
+    """Direct execution of an order dict"""
+    order_type = order.get("order")
+    order_info = order.get("info")
 
-    order = data.get('order')
-    order_info = data.get('info')
+    if order_type not in valid_orders:
+        logging.warning(f"Invalid order type: {order_type}")
+        return
 
-    if order not in valid_orders:
-        return web.Response(status=400, text="Invalid order.")
-
-    if order == "ALERT_USER_BUG_REPORT":
+    if order_type == "ALERT_USER_BUG_REPORT_RESOLUTION":
         resolution = order_info.get('resolution')
         if resolution not in valid_bug_resolutions:
-            return web.Response(status=400, text="Invalid resolution.")
+            logging.warning(f"Invalid resolution: {resolution}")
+            return
 
-        user_id = order_info.get('user_id')
+        user_id = order_info.get('reporting_user_id')
         report_id = order_info.get('report_id')
 
         if not all([user_id, report_id]):
-            return web.Response(status=400, text="Missing user_id or report_id.")
+            logging.warning("Missing user_id or report_id")
+            return
 
         dmc = await botapp.rest.create_dm_channel(int(user_id))
 
@@ -58,10 +53,11 @@ async def execute_order(request):
 
         bug_data = database.get_bug_report(report_id)
         if not bug_data:
-            return web.Response(status=400, text="Bad report ID.")
+            logging.warning("Invalid bug report ID")
+            return
 
         embed.add_field(
-            name=f"Information about your report",
+            name="Information about your report",
             value=f"Stated Bug: {bug_data['stated_bug']}\n"
                   f"How to cause it: {bug_data['reproduction']}\n"
                   f"Additional Info: {bug_data['extra_info']}"
@@ -80,14 +76,4 @@ async def execute_order(request):
         try:
             await dmc.send(embed)
         except hikari.ForbiddenError:
-            return web.Response(status=403, text="Forbidden")
-
-    return web.Response(status=200, text="All good")
-
-
-app = web.Application()
-app.router.add_post("/api/order", execute_order)
-
-def run_api():
-    print("API STARTUP INITIATED")
-    web.run_app(app, port=8000)
+            logging.warning("Forbidden: Cannot DM user.")
